@@ -483,15 +483,19 @@ def process_url(url):
     """Process a single URL based on its type."""
     try:
         # Clean up URL - remove tracking parameters
+        print("Cleaning up URL")
         url = url.split('?')[0] if '?' in url else url
         
         # Expand shortened Pinterest URL
         if 'pin.it' in url:
+            print("Expanding Pinterest URL")
             response = requests.head(url, allow_redirects=True)
             url = response.url
+            print("Expanded URL: ", url)
             
         # Fix Tumblr URLs
         if 'tumblr.com' in url:
+            print("Fixing Tumblr URL")
             # Remove any query parameters first
             url = url.split('?')[0]
             
@@ -506,26 +510,35 @@ def process_url(url):
         video_path = None
         info = None
         
+        print("Determining platform from URL")
         if "tiktok.com" in url:
+            print("Processing TikTok URL")
             video_path, info = download_video_tiktok(url)
         elif "youtube.com" in url or "youtu.be" in url:
+            print("Processing YouTube URL")
             video_path, info = download_video_youtube(url)
         elif "tumblr.com" in url:
+            print("Processing Tumblr URL")
             video_path, info = download_video_tumblr(url)
         elif "pinterest.com" in url or "pin.it" in url:
+            print("Processing Pinterest URL")
             video_path, info = download_video_pinterest(url)
         elif "instagram.com" in url:
+            print("Processing Instagram URL")
             video_path, info = download_video_instagram(url)
         else:
             print(f"Unsupported URL: {url}")
             return
         
         if video_path and info:
+            print("Video downloaded successfully")
             # Get platform and username from URL
             platform, username = get_platform_and_username(url)
+            print(f"Platform: {platform}, Username: {username}")
             
             # For YouTube, get channel handle from video metadata
             if platform == "YouTube" and not username:
+                print("Getting YouTube channel handle")
                 # First try to get handle from channel URL directly
                 channel_url = info.get('channel_url', '')
                 if '/@' in channel_url:
@@ -559,6 +572,7 @@ def process_url(url):
 
             # For Pinterest, get username from metadata
             elif platform == "Pinterest" and not username:
+                print("Getting Pinterest username")
                 # Try to get username from original URL if available
                 original_url = info.get('original_url', '')
                 if original_url and 'pinterest.com/' in original_url:
@@ -747,10 +761,11 @@ def process_url(url):
                 except Exception as e:
                     print(f"Could not fetch source video info: {str(e)}")
             
+            print("Calling add_to_queue")
             add_to_queue(video_path, metadata)
             
     except Exception as e:
-        print(f"Error processing {url}: {str(e)}")
+        print(f"Error processing URL: {e}")
 
 def main():
     """Main function to process URLs."""
