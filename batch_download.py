@@ -18,7 +18,7 @@ import gspread
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.DEBUG, handlers=[logging.StreamHandler(sys.stderr)])
 
 # Output folders
 OUTPUT_FOLDER = "downloaded_videos"
@@ -785,6 +785,14 @@ from flask import Flask, request, jsonify
 import os
 
 app = Flask(__name__)
+
+# Ensure Flask app logger is set to DEBUG
+app.logger.setLevel(logging.DEBUG)
+
+# Add StreamHandler to ensure logs are output to stderr
+handler = logging.StreamHandler()
+handler.setLevel(logging.DEBUG)
+app.logger.addHandler(handler)
 
 @app.route("/", methods=["GET"])
 def home():
