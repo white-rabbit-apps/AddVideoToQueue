@@ -18,7 +18,7 @@ import gspread
 import logging
 
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 # Output folders
 OUTPUT_FOLDER = "downloaded_videos"
@@ -187,6 +187,7 @@ def get_platform_and_username(url):
 
 def add_to_queue(video_path, metadata):
     """Add video to upload queue in Google Sheets."""
+    print("add_to_queue function called")  # Verify function execution
     try:
         logging.info("Starting to add video to queue")
         logging.debug(f"Video path: {video_path}")
