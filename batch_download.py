@@ -190,18 +190,21 @@ def add_to_queue(video_path, metadata):
         print(f"Metadata: {metadata}")
 
         # Get sheet
+        print("Attempting to get sheet information")
         sheet_info = get_sheet()
         if not sheet_info:
             print("Failed to get sheet")
             return
-        
+
         print("Successfully retrieved sheet information")
         sheets_service, spreadsheet_id = sheet_info
-        
+
         # Skip if URL already in queue
+        print("Checking if URL is already in queue")
         if is_url_in_queue(metadata['webpage_url'], sheet_info):
             print(f"Video already in queue: {metadata['webpage_url']}")
             if os.path.exists(video_path):
+                print("Removing local file as it's already in queue")
                 os.remove(video_path)  # Clean up local file
             return
 
@@ -214,6 +217,7 @@ def add_to_queue(video_path, metadata):
 
         print(f"Drive URL: {drive_url}")
         # Add to sheet
+        print("Preparing to add video information to the Google Sheet")
         timestamp = "2025-01-19T21:40:28-08:00"  # Using provided timestamp
         row = [[
             timestamp,
@@ -235,19 +239,19 @@ def add_to_queue(video_path, metadata):
             insertDataOption='INSERT_ROWS',
             body={'values': row}
         ).execute()
-        
+
         print(f"Successfully added to queue: {metadata.get('title', 'Untitled')}")
 
         # Clean up local file
         if os.path.exists(video_path):
+            print(f"Removing local file: {video_path}")
             os.remove(video_path)
-            print(f"Removed local file: {video_path}")
 
     except Exception as e:
         print(f"Error adding to queue: {e}")
         if os.path.exists(video_path):
+            print(f"Removing local file after error: {video_path}")
             os.remove(video_path)  # Clean up local file even if there's an error
-            print(f"Removed local file after error: {video_path}")
 
 def upload_to_drive(file_path, folder_name='TikTok Videos', max_retries=3, retry_delay=1):
     """Upload a file to Google Drive and return its public URL."""
