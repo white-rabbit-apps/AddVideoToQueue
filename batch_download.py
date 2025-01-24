@@ -60,6 +60,10 @@ def get_google_services():
             else:
                 raise Exception("Missing Google API credentials. Please provide them via environment variable.")
 
+        # Handle case where refresh_token is not needed
+        if not creds.valid:
+            raise Exception("Credentials are not valid. Please check your credentials.")
+
         # Save the credentials for the next run
         with open(TOKEN_FILE, 'wb') as token:
             pickle.dump(creds, token)
