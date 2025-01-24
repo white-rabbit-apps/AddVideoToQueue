@@ -401,9 +401,14 @@ def download_video_youtube(url):
         ydl_opts = {
             'format': 'best[ext=mp4]',
             'outtmpl': os.path.join(OUTPUT_FOLDER, '%(extractor_key)s_%(id)s.%(ext)s'),
-            'quiet': True
+            'quiet': True,
+            'cookiefile': '/path/to/cookies.txt'  # Path to your cookies file
         }
         
+        # Create a temporary cookies file
+        with open('/path/to/cookies.txt', 'w') as f:
+            f.write("VISITOR_INFO1_LIVE=nn4EZjhRmLc; VISITOR_PRIVACY_METADATA=CgJVUxIEGgAgXw%3D%3D; HSID=Ax4DKnOTC95aVM8BQ; SSID=AsrKLteQikDYadZq9; APISID=LUjqEB8LmmEW3V7y/ALww5avirLF9etVPh; SAPISID=LNsf9N9qgi57QbK8/AJv89n722eQlCrXow; __Secure-1PAPISID=LNsf9N9qgi57QbK8/AJv89n722eQlCrXow; __Secure-3PAPISID=LNsf9N9qgi57QbK8/AJv89n722eQlCrXow; LOGIN_INFO=AFmmF2swRQIgXpwVXfExocSJopBMg1zF0sGaU8lmu32BLPhvy9CCVjQCIQDZXj6-VzW8glTSS8exyMqRCaOYur71_nk0NOHYVskL7Q:QUQ3MjNmekYxTUhZS1pMemlNR21pMWhISDctU3hnUlhzSzdVWkh4aHRtM0tobW5FcTRsWWgyeml5YnBWSmJvRGxnZFhZQTVhdmczVnM1RTNOTWFSLW4zY0I1SUhEbEllQ0MwaWN2ckVTMGRNX0pIUHB4RkZvYmViNTZzbm9EVEFMbXRjNGxSNzZsOExnWUdQVlVrSG9vVUFpVWN1MGRuR3p3; SID=g.a000sgiaEWr8rbsw275q_eukI99t2o0T4kkNiXud0KMwHChUpaXw2JHW_MJaq1ZtT4CPWZSW7AACgYKARQSARUSFQHGX2MiM2mNqTHx5umacwBbDL2PxxoVAUF8yKpRce6odwHvn8AbenJVnD930076; __Secure-1PSID=g.a000sgiaEWr8rbsw275q_eukI99t2o0T4kkNiXud0KMwHChUpaXwOJo6SJibM6tWClNurdosLQACgYKAUgSARUSFQHGX2MitPacfGdI4LBiYrnqKJsvmhoVAUF8yKrjxD1uV2-1th0NFPrtt1L10076; __Secure-3PSID=g.a000sgiaEWr8rbsw275q_eukI99t2o0T4kkNiXud0KMwHChUpaXwh3no93TD1yB20QN0Y5JiswACgYKAcwSARUSFQHGX2MiXiJ3nQ3TRFTEDLluyoiYtRoVAUF8yKq6V_bSlrb9XdAYYGKWxu1w0076; YSC=K2BAdCT4q58; __Secure-ROLLOUT_TOKEN=CKbzu9iLjdLglwEQ6bmtkaX-igMY3L7zoauMiwM%3D; PREF=f6=40000080&f7=100&tz=America.Los_Angeles&f4=4000000; __Secure-1PSIDTS=sidts-CjIBmiPuTTjsmPfq-1gP17M2kzIZ5mT-c2dg0plHq_a1J6uzHT9Sn02qHNCfVWRfUDAkuhAA; __Secure-3PSIDTS=sidts-CjIBmiPuTTjsmPfq-1gP17M2kzIZ5mT-c2dg0plHq_a1J6uzHT9Sn02qHNCfVWRfUDAkuhAA; ST-l3hjtt=session_logininfo=AFmmF2swRQIgXpwVXfExocSJopBMg1zF0sGaU8lmu32BLPhvy9CCVjQCIQDZXj6-VzW8glTSS8exyMqRCaOYur71_nk0NOHYVskL7Q%3AQUQ3MjNmekYxTUhZS1pMemlNR21pMWhISDctU3hnUlhzSzdVWkh4aHRtM0tobW5FcTRsWWgyeml5YnBWSmJvRGxnZFhZQTVhdmczVnM1RTNOTWFSLW4zY0I1SUhEbEllQ0MwaWN2ckVTMGRNX0pIUHB4RkZvYmViNTZzbm9EVEFMbXRjNGxSNzZsOExnWUdQVlVrSG9vVUFpVWN1MGRuR3p3; ST-xuwub9=session_logininfo=AFmmF2swRQIgXpwVXfExocSJopBMg1zF0sGaU8lmu32BLPhvy9CCVjQCIQDZXj6-VzW8glTSS8exyMqRCaOYur71_nk0NOHYVskL7Q%3AQUQ3MjNmekYxTUhZS1pMemlNR21pMWhISDctU3hnUlhzSzdVWkh4aHRtM0tobW5FcTRsWWgyeml5YnBWSmJvRGxnZFhZQTVhdmczVnM1RTNOTWFSLW4zY0I1SUhEbEllQ0MwaWN2ckVTMGRNX0pIUHB4RkZvYmViNTZzbm9EVEFMbXRjNGxSNzZsOExnWUdQVlVrSG9vVUFpVWN1MGRuR3p3; SIDCC=AKEyXzVFIe9QQ_-HHPTK9kcN6D0nuenHa4pqznzfcE-QPovvLybc0bBEQgFA62Wa02M0zHjNSZLS; __Secure-1PSIDCC=AKEyXzUkn3FkBvy9W7Uxua_N0K9f69WFFIfnencAmMsPGUF8QunlWzMXUPBJosJ3aW9nKOEIF5rN; __Secure-3PSIDCC=AKEyXzWMC5cFPEr1FMIBg51ukqpK4c5Xyxt3W9VutOdXqpAc3boYXctLQSvSQ0KHJDu4RrgmUjA")
+
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
             return get_video_path(info), info
