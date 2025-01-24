@@ -702,6 +702,31 @@ def main():
     print("The queue has been synced to your Google Drive.")
     print("You can now set up Make.com to monitor the queue folder and post to TikTok.")
 
-if __name__ == "__main__":
-    main()
+from flask import Flask, request, jsonify
 
+app = Flask(__name__)
+
+@app.route('/process', methods=['POST'])
+def process_videos():
+    try:
+        # Extract URL from the request body
+        data = request.json
+        url = data.get('url')
+        
+        if not url:
+            return jsonify({"error": "No URL provided"}), 400
+
+        # Process the URL
+        process_url(url)
+
+        return jsonify({"message": "Video processed and added to the upload queue."}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+if __name__ == "__main__":
+    # Add condition to allow CLI use or Flask API
+    import sys
+    if len(sys.argv) > 1:
+        main()  # Run the existing CLI-based logic
+    else:
+        app.run(host="0.0.0.0", port=8080)
