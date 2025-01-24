@@ -479,6 +479,7 @@ def download_video_pinterest(url):
         return None, None
 
 def process_url(url):
+    print("process_url function called with URL: ", url)
     """Process a single URL based on its type."""
     try:
         # Clean up URL - remove tracking parameters
