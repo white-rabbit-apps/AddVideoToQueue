@@ -49,11 +49,14 @@ def get_google_services():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            # Load credentials from environment variable
+            # Save the credentials JSON to a file
             credentials_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
             if credentials_json:
-                credentials_data = json.loads(credentials_json)
-                creds = Credentials.from_authorized_user_info(credentials_data, SCOPES)
+                with open('credentials.json', 'w') as creds_file:
+                    creds_file.write(credentials_json)
+
+                # Load the credentials from the file
+                creds = Credentials.from_authorized_user_file('credentials.json', SCOPES)
             else:
                 raise Exception("Missing Google API credentials. Please provide them via environment variable.")
 
