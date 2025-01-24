@@ -56,7 +56,15 @@ def get_google_services():
                     creds_file.write(credentials_json)
 
                 # Load the credentials from the file
-                creds = Credentials.from_authorized_user_file('credentials.json', SCOPES)
+                credentials_data = json.loads(credentials_json)
+                installed_creds = credentials_data.get('installed', {})
+                client_id = installed_creds.get('client_id')
+                client_secret = installed_creds.get('client_secret')
+
+                if client_id and client_secret:
+                    creds = Credentials(client_id=client_id, client_secret=client_secret, token_uri=installed_creds.get('token_uri'))
+                else:
+                    raise Exception("Missing client_id or client_secret in credentials.")
             else:
                 raise Exception("Missing Google API credentials. Please provide them via environment variable.")
 
