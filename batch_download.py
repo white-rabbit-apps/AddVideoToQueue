@@ -6,7 +6,7 @@ import time
 import re
 from datetime import datetime
 from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
+from google_auth_oauthlib.flow import InstalledAppFlow, Flow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaFileUpload
@@ -52,6 +52,9 @@ def get_google_services():
             # Save the credentials JSON to a file
             credentials_json = os.getenv('GOOGLE_CREDENTIALS_JSON')
             if credentials_json:
+                # Debugging: Log the JSON content before parsing
+                print("Credentials JSON:", credentials_json)
+
                 with open('credentials.json', 'w') as creds_file:
                     creds_file.write(credentials_json)
 
@@ -62,8 +65,10 @@ def get_google_services():
                 client_secret = installed_creds.get('client_secret')
 
                 if client_id and client_secret:
-                    # Use Credentials.from_client_info to handle client_id and client_secret
-                    creds = Credentials.from_client_info(installed_creds, SCOPES)
+                    # Use InstalledAppFlow for handling installed app credentials
+                    flow = InstalledAppFlow.from_client_config(credentials_data, SCOPES)
+                    creds = flow.run_local_server(port=0)
+
                     if not creds.valid:
                         raise Exception("Credentials are not valid. Please check your credentials.")
                 else:
@@ -841,5 +846,5 @@ def process_video():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
