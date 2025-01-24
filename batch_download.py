@@ -176,6 +176,8 @@ def get_platform_and_username(url):
             return "Tumblr", match.group(1)
     elif "pinterest.com" in url or "pin.it" in url:
         return "Pinterest", None  # Will get username from metadata
+    elif "instagram.com" in url:
+        return "Instagram", None  # Will get username from metadata
         
     return None, None
 
@@ -496,10 +498,12 @@ def process_url(url):
             video_path, info = download_video_tumblr(url)
         elif "pinterest.com" in url or "pin.it" in url:
             video_path, info = download_video_pinterest(url)
+        elif "instagram.com" in url:
+            video_path, info = download_video_instagram(url)
         else:
             print(f"Unsupported URL: {url}")
             return
-            
+        
         if video_path and info:
             # Get platform and username from URL
             platform, username = get_platform_and_username(url)
@@ -567,6 +571,36 @@ def process_url(url):
                 if not username or username.isdigit() or username == 'pin':
                     username = info.get('uploader', 'Unknown')
             
+            # For Instagram, get username from metadata
+            elif platform == "Instagram" and not username:
+                # Try to get username from original URL if available
+                original_url = info.get('original_url', '')
+                if original_url and 'instagram.com/' in original_url:
+                    try:
+                        username = original_url.split('instagram.com/')[1].split('/')[0]
+                        if username and not username.isdigit():
+                            return username
+                    except:
+                        pass
+
+                # Try to get username from uploader URL
+                uploader_url = info.get('uploader_url', '')
+                if uploader_url:
+                    if '/user/' in uploader_url:
+                        username = uploader_url.split('/user/')[1].strip('/')
+                    elif uploader_url.startswith('https://www.instagram.com/'):
+                        username = uploader_url.split('instagram.com/')[1].strip('/')
+                
+                # Try uploader_id if it's not numeric
+                if not username or username.isdigit():
+                    uploader_id = info.get('uploader_id', '')
+                    if uploader_id and not uploader_id.isdigit():
+                        username = uploader_id
+                
+                # Fall back to display name only if we couldn't get a username
+                if not username or username.isdigit():
+                    username = info.get('uploader', 'Unknown')
+            
             metadata = {
                 'title': info.get('title', 'Untitled'),
                 'description': info.get('description', ''),
@@ -610,6 +644,8 @@ def process_url(url):
                             source_platform = "Tumblr"
                         elif "pinterest.com" in source_url or "pin.it" in source_url:
                             source_platform = "Pinterest"
+                        elif "instagram.com" in source_url:
+                            source_platform = "Instagram"
                         
                         if source_platform == "YouTube":
                             # First try to get handle from channel URL directly
@@ -633,8 +669,8 @@ def process_url(url):
                             if original_url and 'pinterest.com/' in original_url:
                                 try:
                                     source_username = original_url.split('pinterest.com/')[1].split('/')[0]
-                                    if source_username.isdigit() or source_username == 'pin':
-                                        source_username = None
+                                    if source_username and not source_username.isdigit() and source_username != 'pin':
+                                        return source_username
                                 except:
                                     pass
                             
@@ -655,6 +691,34 @@ def process_url(url):
                             
                             # Fall back to display name if needed
                             if not source_username or source_username.isdigit() or source_username == 'pin':
+                                source_username = source_info.get('uploader', 'Unknown')
+                        elif source_platform == "Instagram":
+                            # Try to get username from original URL if available
+                            original_url = source_info.get('original_url', '')
+                            if original_url and 'instagram.com/' in original_url:
+                                try:
+                                    source_username = original_url.split('instagram.com/')[1].split('/')[0]
+                                    if source_username and not source_username.isdigit():
+                                        return source_username
+                                except:
+                                    pass
+
+                            # Try to get username from uploader URL
+                            uploader_url = source_info.get('uploader_url', '')
+                            if uploader_url:
+                                if '/user/' in uploader_url:
+                                    source_username = uploader_url.split('/user/')[1].strip('/')
+                                elif uploader_url.startswith('https://www.instagram.com/'):
+                                    source_username = uploader_url.split('instagram.com/')[1].strip('/')
+                            
+                            # Try uploader_id if it's not numeric
+                            if not source_username or source_username.isdigit():
+                                uploader_id = source_info.get('uploader_id', '')
+                                if uploader_id and not uploader_id.isdigit():
+                                    source_username = uploader_id
+                            
+                            # Fall back to display name if needed
+                            if not source_username or source_username.isdigit():
                                 source_username = source_info.get('uploader', 'Unknown')
                         else:
                             source_username = source_info.get('uploader', 'Unknown')
