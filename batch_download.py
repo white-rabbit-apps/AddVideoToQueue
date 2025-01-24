@@ -62,15 +62,14 @@ def get_google_services():
                 client_secret = installed_creds.get('client_secret')
 
                 if client_id and client_secret:
-                    creds = Credentials(client_id=client_id, client_secret=client_secret, token_uri=installed_creds.get('token_uri'))
+                    # Use Credentials.from_client_info to handle client_id and client_secret
+                    creds = Credentials.from_client_info(installed_creds, SCOPES)
+                    if not creds.valid:
+                        raise Exception("Credentials are not valid. Please check your credentials.")
                 else:
                     raise Exception("Missing client_id or client_secret in credentials.")
             else:
                 raise Exception("Missing Google API credentials. Please provide them via environment variable.")
-
-        # Handle case where refresh_token is not needed
-        if not creds.valid:
-            raise Exception("Credentials are not valid. Please check your credentials.")
 
         # Save the credentials for the next run
         with open(TOKEN_FILE, 'wb') as token:
