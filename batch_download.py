@@ -15,10 +15,6 @@ import pickle
 import sys
 import argparse
 import gspread
-import logging
-
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, handlers=[logging.StreamHandler(sys.stderr)])
 
 # Output folders
 OUTPUT_FOLDER = "downloaded_videos"
@@ -189,34 +185,34 @@ def add_to_queue(video_path, metadata):
     """Add video to upload queue in Google Sheets."""
     print("add_to_queue function called")  # Verify function execution
     try:
-        logging.info("Starting to add video to queue")
-        logging.debug(f"Video path: {video_path}")
-        logging.debug(f"Metadata: {metadata}")
+        print("Starting to add video to queue")
+        print(f"Video path: {video_path}")
+        print(f"Metadata: {metadata}")
 
         # Get sheet
         sheet_info = get_sheet()
         if not sheet_info:
-            logging.error("Failed to get sheet")
+            print("Failed to get sheet")
             return
         
-        logging.debug("Successfully retrieved sheet information")
+        print("Successfully retrieved sheet information")
         sheets_service, spreadsheet_id = sheet_info
         
         # Skip if URL already in queue
         if is_url_in_queue(metadata['webpage_url'], sheet_info):
-            logging.info(f"Video already in queue: {metadata['webpage_url']}")
+            print(f"Video already in queue: {metadata['webpage_url']}")
             if os.path.exists(video_path):
                 os.remove(video_path)  # Clean up local file
             return
 
-        logging.info("Uploading video to Google Drive")
+        print("Uploading video to Google Drive")
         # Upload to Drive
         drive_url = upload_to_drive(video_path)
         if not drive_url:
-            logging.error("Failed to upload to Drive")
+            print("Failed to upload to Drive")
             return
 
-        logging.debug(f"Drive URL: {drive_url}")
+        print(f"Drive URL: {drive_url}")
         # Add to sheet
         timestamp = "2025-01-19T21:40:28-08:00"  # Using provided timestamp
         row = [[
@@ -231,7 +227,7 @@ def add_to_queue(video_path, metadata):
             'pending'  # Status
         ]]
 
-        logging.info("Adding video information to the Google Sheet")
+        print("Adding video information to the Google Sheet")
         sheets_service.spreadsheets().values().append(
             spreadsheetId=spreadsheet_id,
             range='Queue!A:I',  # Updated range to include new columns
@@ -240,18 +236,18 @@ def add_to_queue(video_path, metadata):
             body={'values': row}
         ).execute()
         
-        logging.info(f"Successfully added to queue: {metadata.get('title', 'Untitled')}")
+        print(f"Successfully added to queue: {metadata.get('title', 'Untitled')}")
 
         # Clean up local file
         if os.path.exists(video_path):
             os.remove(video_path)
-            logging.debug(f"Removed local file: {video_path}")
+            print(f"Removed local file: {video_path}")
 
     except Exception as e:
-        logging.error(f"Error adding to queue: {e}")
+        print(f"Error adding to queue: {e}")
         if os.path.exists(video_path):
             os.remove(video_path)  # Clean up local file even if there's an error
-            logging.debug(f"Removed local file after error: {video_path}")
+            print(f"Removed local file after error: {video_path}")
 
 def upload_to_drive(file_path, folder_name='TikTok Videos', max_retries=3, retry_delay=1):
     """Upload a file to Google Drive and return its public URL."""
@@ -786,14 +782,6 @@ from flask import Flask, request, jsonify
 import os
 
 app = Flask(__name__)
-
-# Ensure Flask app logger is set to DEBUG
-app.logger.setLevel(logging.DEBUG)
-
-# Add StreamHandler to ensure logs are output to stderr
-handler = logging.StreamHandler()
-handler.setLevel(logging.DEBUG)
-app.logger.addHandler(handler)
 
 @app.route("/", methods=["GET"])
 def home():
