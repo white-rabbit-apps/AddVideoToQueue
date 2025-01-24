@@ -404,12 +404,10 @@ def get_video_path(info, ext=None):
 def download_video_youtube(url):
     """Download a video from YouTube."""
     try:
-        cookies_file_path = os.path.join(os.path.dirname(__file__), 'cookies.txt')
         ydl_opts = {
             'format': 'best[ext=mp4]',
             'outtmpl': os.path.join(OUTPUT_FOLDER, '%(extractor_key)s_%(id)s.%(ext)s'),
-            'quiet': True,
-            'cookiefile': cookies_file_path  # Use the new cookies file from the repository
+            'quiet': True
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
