@@ -855,11 +855,17 @@ def upload_to_drive(video_data):
     with tempfile.NamedTemporaryFile(delete=False) as temp_file:
         temp_file.write(video_data)
         temp_file_path = temp_file.name
+        print(f"Temporary file created at: {temp_file_path}")
 
     try:
-        # Upload the file to Google Drive
-        drive_url = upload_to_drive(temp_file_path)
-        return drive_url
+        # Check if the file exists before uploading
+        if os.path.exists(temp_file_path):
+            print(f"File exists: {temp_file_path}")
+            # Upload the file to Google Drive
+            drive_url = upload_to_drive(temp_file_path)
+            return drive_url
+        else:
+            print(f"File not found: {temp_file_path}")
     finally:
         # Clean up the temporary file
         os.remove(temp_file_path)
