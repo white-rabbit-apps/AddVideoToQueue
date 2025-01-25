@@ -281,7 +281,7 @@ def add_to_queue(video_path, metadata):
             print(f"Removing local file after error: {video_path}")
             os.remove(video_path)  # Clean up local file even if there's an error
 
-def upload_to_drive(video_path, folder_name='TikTok Videos', max_retries=3, retry_delay=1):
+def upload_to_drive(video_data, folder_name='TikTok Videos', max_retries=3, retry_delay=1):
     """Upload a file to Google Drive and return its public URL."""
     try:
         _, drive_service = get_google_services()
@@ -304,12 +304,11 @@ def upload_to_drive(video_path, folder_name='TikTok Videos', max_retries=3, retr
             folder_id = folder['id']
         
         # Use an in-memory bytes buffer
-        with open(video_path, 'rb') as f:
-            video_buffer = io.BytesIO(f.read())
+        video_buffer = io.BytesIO(video_data)
 
         # Prepare file metadata
         file_metadata = {
-            'name': os.path.basename(video_path),
+            'name': 'video.mp4',
             'parents': [folder_id]
         }
         
@@ -440,17 +439,19 @@ def download_video_youtube(url):
         return None, None
 
 def download_video_tiktok(url):
-    """Download a video from TikTok."""
+    """Download a video from TikTok and return it as bytes."""
     try:
         ydl_opts = {
             'format': 'best[ext=mp4]',
-            'outtmpl': os.path.join(OUTPUT_FOLDER, '%(extractor_key)s_%(id)s.%(ext)s'),
             'quiet': True
         }
         
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            return get_video_path(info), info
+            info = ydl.extract_info(url, download=False)
+            video_url = info.get('url')
+            response = requests.get(video_url)
+            video_data = response.content
+            return video_data, info
     except Exception as e:
         print(f"Failed to download TikTok video: {url}. Error: {str(e)}")
         return None, None
@@ -535,13 +536,13 @@ def process_url(url):
                     url = f"https://{blog_name}.tumblr.com/post/{post_id}"
                     print(f"Fixed Tumblr URL: {url}")
 
-        video_path = None
+        video_data = None
         info = None
         
         print("Determining platform from URL")
         if "tiktok.com" in url:
             print("Processing TikTok URL")
-            video_path, info = download_video_tiktok(url)
+            video_data, info = download_video_tiktok(url)
         elif "youtube.com" in url or "youtu.be" in url:
             print("Processing YouTube URL")
             video_path, info = download_video_youtube(url)
@@ -558,8 +559,9 @@ def process_url(url):
             print(f"Unsupported URL: {url}")
             return
         
-        if video_path and info:
+        if video_data and info:
             print("Video downloaded successfully")
+            upload_to_drive(video_data)
             # Get platform and username from URL
             platform, username = get_platform_and_username(url)
             print(f"Platform: {platform}, Username: {username}")
@@ -790,7 +792,7 @@ def process_url(url):
                     print(f"Could not fetch source video info: {str(e)}")
             
             print("Calling add_to_queue")
-            add_to_queue(video_path, metadata)
+            add_to_queue(None, metadata)
             
     except Exception as e:
         print(f"Error processing URL: {e}")
