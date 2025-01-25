@@ -15,6 +15,8 @@ import pickle
 import sys
 import argparse
 import gspread
+import tempfile
+import shutil
 
 # Output folders
 OUTPUT_FOLDER = "downloaded_videos"
@@ -848,3 +850,16 @@ def process_video():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
+
+def upload_to_drive(video_data):
+    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+        temp_file.write(video_data)
+        temp_file_path = temp_file.name
+
+    try:
+        # Upload the file to Google Drive
+        drive_url = upload_to_drive(temp_file_path)
+        return drive_url
+    finally:
+        # Clean up the temporary file
+        os.remove(temp_file_path)
