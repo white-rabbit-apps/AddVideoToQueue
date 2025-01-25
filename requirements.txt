@@ -9,3 +9,4 @@ google-auth-httplib2
 pytz
 python-dotenv
 oauth2client
+urllib3

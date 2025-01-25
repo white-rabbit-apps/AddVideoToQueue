@@ -22,6 +22,7 @@ import io
 from oauth2client.service_account import ServiceAccountCredentials
 from flask import Flask, request, jsonify
 import logging
+from urllib.parse import urlparse
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -370,6 +371,11 @@ def process_video_data(video_path, metadata):
             platform = 'Unknown'
             username = 'Unknown'
         
+        # Check if URL is already in the sheet
+        if is_url_in_sheet(sheets_service, SPREADSHEET_ID, SHEET_NAME, metadata['source_url']):
+            logging.info("URL is already in the queue. Skipping.")
+            return
+        
         # Prepare the data to match the spreadsheet columns
         values = [[
             datetime.now().isoformat(),  # Timestamp
@@ -493,6 +499,23 @@ def process_url(url):
     except Exception as e:
         logging.error(f"Error processing URL: {url}. Error: {str(e)}")
         return None, None
+
+def is_url_in_sheet(sheets_service, spreadsheet_id, sheet_name, url):
+    # Strip URL parameters
+    parsed_url = urlparse(url)
+    base_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+    
+    # Retrieve existing URLs from the sheet
+    result = sheets_service.spreadsheets().values().get(
+        spreadsheetId=spreadsheet_id,
+        range=f"{sheet_name}!D:D"  # Assuming URLs are in column D
+    ).execute()
+    
+    existing_urls = result.get('values', [])
+    # Flatten the list and compare
+    existing_urls = [row[0] for row in existing_urls if row]
+    
+    return base_url in existing_urls
 
 # Flask Routes
 
