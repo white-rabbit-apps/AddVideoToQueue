@@ -9,7 +9,7 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow, Flow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
-from googleapiclient.http import MediaFileUpload
+from googleapiclient.http import MediaFileUpload, MediaIoBaseUpload
 from googleapiclient.errors import HttpError
 import pickle
 import sys
@@ -17,6 +17,7 @@ import argparse
 import gspread
 import tempfile
 import shutil
+import io
 
 # Output folders
 OUTPUT_FOLDER = "downloaded_videos"
@@ -280,7 +281,7 @@ def add_to_queue(video_path, metadata):
             print(f"Removing local file after error: {video_path}")
             os.remove(video_path)  # Clean up local file even if there's an error
 
-def upload_to_drive(file_path, folder_name='TikTok Videos', max_retries=3, retry_delay=1):
+def upload_to_drive(video_path, folder_name='TikTok Videos', max_retries=3, retry_delay=1):
     """Upload a file to Google Drive and return its public URL."""
     try:
         _, drive_service = get_google_services()
@@ -302,22 +303,22 @@ def upload_to_drive(file_path, folder_name='TikTok Videos', max_retries=3, retry
             folder = drive_service.files().create(body=folder_metadata).execute()
             folder_id = folder['id']
         
+        # Use an in-memory bytes buffer
+        with open(video_path, 'rb') as f:
+            video_buffer = io.BytesIO(f.read())
+
+        # Prepare file metadata
+        file_metadata = {
+            'name': os.path.basename(video_path),
+            'parents': [folder_id]
+        }
+        
+        # Create media
+        media = MediaIoBaseUpload(video_buffer, mimetype='video/mp4', resumable=True)
+        
         # Upload file with retries
         for attempt in range(max_retries):
             try:
-                # Prepare file metadata
-                file_metadata = {
-                    'name': os.path.basename(file_path),
-                    'parents': [folder_id]
-                }
-                
-                # Create media
-                media = MediaFileUpload(
-                    file_path,
-                    mimetype='video/mp4',
-                    resumable=True
-                )
-                
                 # Upload file
                 file = drive_service.files().create(
                     body=file_metadata,
@@ -850,28 +851,3 @@ def process_video():
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     app.run(host="0.0.0.0", port=port)
-
-def upload_to_drive(video_data):
-    try:
-        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-            temp_file.write(video_data)
-            temp_file_path = temp_file.name
-            print(f"Temporary file created at: {temp_file_path}")
-
-        # Check if the file exists before uploading
-        if os.path.exists(temp_file_path):
-            print(f"File exists: {temp_file_path}")
-            # Upload the file to Google Drive
-            drive_url = upload_to_drive(temp_file_path)
-            print(f"Uploaded to Drive: {drive_url}")
-            return drive_url
-        else:
-            print(f"File not found: {temp_file_path}")
-            raise FileNotFoundError(f"File not found: {temp_file_path}")
-    except Exception as e:
-        print(f"Error uploading to Drive: {e}")
-    finally:
-        # Clean up the temporary file
-        if os.path.exists(temp_file_path):
-            os.remove(temp_file_path)
-            print(f"Temporary file deleted: {temp_file_path}")
