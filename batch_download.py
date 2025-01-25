@@ -246,7 +246,7 @@ def add_to_queue(video_path, metadata):
         print(f"Drive URL: {drive_url}")
         # Add to sheet
         print("Preparing to add video information to the Google Sheet")
-        timestamp = "2025-01-19T21:40:28-08:00"  # Using provided timestamp
+        timestamp = datetime.now().isoformat()  # Use current timestamp
         row = [[
             timestamp,
             metadata['platform'],
@@ -449,8 +449,12 @@ def download_video_tiktok(url):
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=False)
             video_url = info.get('url')
+            print(f"Video URL: {video_url}")
             response = requests.get(video_url)
             video_data = response.content
+            print(f"Video data size: {len(video_data)} bytes")
+            if len(video_data) == 0:
+                print("Error: Video data is empty.")
             return video_data, info
     except Exception as e:
         print(f"Failed to download TikTok video: {url}. Error: {str(e)}")
