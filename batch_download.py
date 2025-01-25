@@ -852,20 +852,26 @@ if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port)
 
 def upload_to_drive(video_data):
-    with tempfile.NamedTemporaryFile(delete=False) as temp_file:
-        temp_file.write(video_data)
-        temp_file_path = temp_file.name
-        print(f"Temporary file created at: {temp_file_path}")
-
     try:
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            temp_file.write(video_data)
+            temp_file_path = temp_file.name
+            print(f"Temporary file created at: {temp_file_path}")
+
         # Check if the file exists before uploading
         if os.path.exists(temp_file_path):
             print(f"File exists: {temp_file_path}")
             # Upload the file to Google Drive
             drive_url = upload_to_drive(temp_file_path)
+            print(f"Uploaded to Drive: {drive_url}")
             return drive_url
         else:
             print(f"File not found: {temp_file_path}")
+            raise FileNotFoundError(f"File not found: {temp_file_path}")
+    except Exception as e:
+        print(f"Error uploading to Drive: {e}")
     finally:
         # Clean up the temporary file
-        os.remove(temp_file_path)
+        if os.path.exists(temp_file_path):
+            os.remove(temp_file_path)
+            print(f"Temporary file deleted: {temp_file_path}")
