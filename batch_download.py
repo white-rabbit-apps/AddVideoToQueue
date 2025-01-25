@@ -362,18 +362,14 @@ def process_video_data(video_path, metadata):
         # Determine platform from source URL
         if "tiktok.com" in metadata['source_url']:
             platform = 'TikTok'
+            username = metadata.get('uploader', 'Unknown')  # TikTok username
         elif "instagram.com" in metadata['source_url']:
             platform = 'Instagram'
+            username = metadata.get('channel', 'Unknown')  # Instagram channel
         else:
             platform = 'Unknown'
+            username = 'Unknown'
         
-
-        # Update username to be the @name
-        username = metadata.get('channel', 'Unknown')  # Adjust this if needed
-
-        logging.debug(f"Determined platform: {platform}")
-        logging.debug(f"Determined username: {username}")
-
         # Prepare the data to match the spreadsheet columns
         values = [[
             datetime.now().isoformat(),  # Timestamp
