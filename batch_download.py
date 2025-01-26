@@ -12,13 +12,8 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaFileUpload
-from google.oauth2.service_account import Credentials
 import pickle
-import argparse
 import gspread
-import tempfile
-import shutil
-import io
 from oauth2client.service_account import ServiceAccountCredentials
 from flask import Flask, request, jsonify
 import logging
@@ -33,8 +28,6 @@ SCOPES = [
     'https://www.googleapis.com/auth/spreadsheets',
     'https://www.googleapis.com/auth/drive.file'
 ]
-QUEUE_FILE = os.path.join("upload_queue", "tiktok_queue.json")
-TIKTOK_SESSION_ID = os.getenv('TIKTOK_SESSION_ID')
 TOKEN_FILE = 'token.pickle'
 SPREADSHEET_NAME = 'CommuniKitty Video Upload Queue'
 SHEET_NAME = 'Queue'  # Replace with the actual sheet name
