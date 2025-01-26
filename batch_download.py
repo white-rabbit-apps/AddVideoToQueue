@@ -503,9 +503,8 @@ def process_url(url):
         return None, None
 
 def is_url_in_sheet(sheets_service, spreadsheet_id, sheet_name, url):
-    # Strip URL parameters
-    parsed_url = urlparse(url)
-    base_url = f"{parsed_url.scheme}://{parsed_url.netloc}{parsed_url.path}"
+    # Compare full URL including query parameters
+    logging.debug(f"Checking full URL: {url}")
     
     # Retrieve existing URLs from the sheet
     result = sheets_service.spreadsheets().values().get(
@@ -516,8 +515,11 @@ def is_url_in_sheet(sheets_service, spreadsheet_id, sheet_name, url):
     existing_urls = result.get('values', [])
     # Flatten the list and compare
     existing_urls = [row[0] for row in existing_urls if row]
+    logging.debug(f"Existing URLs in sheet: {existing_urls}")
     
-    return base_url in existing_urls
+    is_duplicate = url in existing_urls
+    logging.debug(f"Is duplicate: {is_duplicate}")
+    return is_duplicate
 
 # Flask Routes
 
