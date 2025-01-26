@@ -220,27 +220,24 @@ def is_url_in_queue(url, sheet_info):
         logging.error(f"Error checking queue: {e}")
         return False
 
-def get_platform_and_username(url):
+def get_platform_and_username(metadata):
+    url = metadata.get('source_url', '')
     logging.debug(f"Getting platform and username for URL: {url}")
     if "tiktok.com" in url:
-        match = re.search(r'@([^/]+)', url)
-        if match:
-            logging.debug(f"Platform and username found: TikTok, {match.group(1)}")
-            return "TikTok", match.group(1)
+        logging.debug(f"Platform found: TikTok")
+        return "TikTok", metadata.get('uploader', 'Unknown')
     elif "youtube.com" in url or "youtu.be" in url:
         logging.debug(f"Platform found: YouTube")
-        return "YouTube", None  
+        return "YouTube", metadata.get('uploader_id', 'Unknown')
     elif "tumblr.com" in url:
-        match = re.search(r'//([^.]+)\.tumblr\.com', url)
-        if match:
-            logging.debug(f"Platform and username found: Tumblr, {match.group(1)}")
-            return "Tumblr", match.group(1)
+        logging.debug(f"Platform found: Tumblr")
+        return "Tumblr", metadata.get('uploader_id', 'Unknown')
     elif "pinterest.com" in url or "pin.it" in url:
         logging.debug(f"Platform found: Pinterest")
-        return "Pinterest", None  
+        return "Pinterest", metadata.get('uploader_id', 'Unknown')
     elif "instagram.com" in url:
         logging.debug(f"Platform found: Instagram")
-        return "Instagram", None  
+        return "Instagram", metadata.get('channel', 'Unknown')
         
     logging.debug(f"Platform and username not found for URL: {url}")
     return None, None
@@ -353,16 +350,8 @@ def process_video_data(video_path, metadata):
         metadata.setdefault('tags', [])
         metadata.setdefault('source_url', '')
         
-        # Determine platform from source URL
-        if "tiktok.com" in metadata['source_url']:
-            platform = 'TikTok'
-            username = metadata.get('uploader', 'Unknown')  # TikTok username
-        elif "instagram.com" in metadata['source_url']:
-            platform = 'Instagram'
-            username = metadata.get('channel', 'Unknown')  # Instagram channel
-        else:
-            platform = 'Unknown'
-            username = 'Unknown'
+        # Determine platform and username using the helper function
+        platform, username = get_platform_and_username(metadata)
         
         # Check if URL is already in the sheet
         if is_url_in_sheet(sheets_service, SPREADSHEET_ID, SHEET_NAME, metadata['source_url']):
@@ -466,6 +455,23 @@ def download_video_instagram(url):
         logging.error(f"Failed to download Instagram video: {url}. Error: {str(e)}")
         return None, None
 
+def download_video_youtube(url):
+    logging.info(f"Downloading YouTube video from URL: {url}")
+    try:
+        ydl_opts = {
+            'format': 'best',
+            'outtmpl': '%(title)s.%(ext)s',
+            'noplaylist': True
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info_dict = ydl.extract_info(url, download=True)
+            video_path = ydl.prepare_filename(info_dict)
+            video_id = info_dict.get('id', 'Unknown')
+            return video_path, info_dict, video_id
+    except Exception as e:
+        logging.error(f"Failed to download YouTube video: {str(e)}")
+        return None, None, 'Unknown'
+
 def process_url(url):
     logging.info(f"Processing URL: {url}")
     try:
@@ -475,6 +481,9 @@ def process_url(url):
         elif "instagram.com" in url:
             logging.debug("Detected Instagram URL.")
             video_path, info = download_video_instagram(url)
+        elif "youtube.com" in url or "youtu.be" in url:
+            logging.debug("Detected YouTube URL.")
+            video_path, info, _ = download_video_youtube(url)
         else:
             logging.warning("Unsupported URL format.")
             return None, None
