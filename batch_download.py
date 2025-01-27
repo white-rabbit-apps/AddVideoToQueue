@@ -461,7 +461,9 @@ def download_video_youtube(url):
         ydl_opts = {
             'format': 'best',
             'outtmpl': '%(title)s.%(ext)s',
-            'noplaylist': True
+            'noplaylist': True,
+            'cookiefile': 'cookies.txt'  # Path to your cookies file
+            # Alternatively, use 'cookiesfrombrowser': 'chrome' for browser cookies
         }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info_dict = ydl.extract_info(url, download=True)
